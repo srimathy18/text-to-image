@@ -2,9 +2,71 @@ import React, { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { assets, plans } from '../assets/assets';
 import { AppContext } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const BuyCredit = () => {
-  const { user } = useContext(AppContext);
+  const { user, backendUrl, loadCreditsData, token, setShowLogin } = useContext(AppContext);
+  const navigate = useNavigate();
+
+  // This function initializes the Razorpay payment flow.
+  const initPay = async (order) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: "Credits Payment",
+      description: "Credits payment",
+      order_id: order.id,
+      receipt: order.receipt,
+      handler: async (response) => {
+        try {
+          const { data } = await axios.post(
+            backendUrl + '/api/user/verify-razor',
+            response,
+            { headers: { token } }
+          );
+          if (data.success) {
+            loadCreditsData();
+            navigate('/');
+            toast.success('Credits Added');
+          } else {
+            toast.error(data.message || 'Payment verification failed');
+          }
+        } catch (error) {
+          console.error("Verification Error:", error);
+          toast.error(error.message || "Payment verification failed");
+        }
+      },
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
+  // This function handles the payment initiation flow based on the selected plan.
+  const paymentRazorpay = async (planId) => {
+    try {
+      if (!user) {
+        setShowLogin(true);
+        return;
+      }
+      const { data } = await axios.post(
+        backendUrl + "/api/user/pay-razor",
+        { planId },
+        { headers: { token } }
+      );
+      if (data.success) {
+        initPay(data.order);
+      } else {
+        toast.error(data.message || "Payment failed. Try again.");
+      }
+    } catch (error) {
+      console.error("Payment Error:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
 
   return (
     <motion.div
@@ -13,7 +75,6 @@ const BuyCredit = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      {/* Heading Section */}
       <motion.button
         className="border border-gray-400 px-10 py-2 rounded-full mb-6"
         whileHover={{ scale: 1.05 }}
@@ -31,7 +92,6 @@ const BuyCredit = () => {
         Choose a Plan
       </motion.h1>
 
-      {/* Plans Section */}
       <motion.div
         className="flex flex-wrap justify-center gap-6 text-left"
         initial="hidden"
@@ -57,6 +117,7 @@ const BuyCredit = () => {
             </p>
 
             <motion.button
+              onClick={() => paymentRazorpay(item.id)}
               className="w-full bg-gray-800 text-white mt-8 text-sm rounded-md py-2.5 min-w-52"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
