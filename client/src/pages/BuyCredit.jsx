@@ -11,50 +11,42 @@ const BuyCredit = () => {
   const { user, backendUrl, loadCreditsData, token, setShowLogin } = useContext(AppContext);
   const navigate = useNavigate();
 
-  // This function initializes the Razorpay payment flow.
+  // This function simulates the dummy payment process.
   const initPay = async (order) => {
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Credits Payment",
-      description: "Credits payment",
-      order_id: order.id,
-      receipt: order.receipt,
-      handler: async (response) => {
-        try {
-          const { data } = await axios.post(
-            backendUrl + '/api/user/verify-razor',
-            response,
-            { headers: { token } }
-          );
-          if (data.success) {
-            loadCreditsData();
-            navigate('/');
-            toast.success('Credits Added');
-          } else {
-            toast.error(data.message || 'Payment verification failed');
-          }
-        } catch (error) {
-          console.error("Verification Error:", error);
-          toast.error(error.message || "Payment verification failed");
+    // Simulate a delay as if processing payment
+    setTimeout(async () => {
+      try {
+        // Call the dummy verify endpoint using the transaction receipt
+        const { data } = await axios.post(
+          `${backendUrl}/api/user/verify-dummy`,
+          { receipt: order.receipt },
+          { headers: { token } }
+        );
+        if (data.success) {
+          loadCreditsData();
+          navigate('/');
+          toast.success('Credits Added');
+        } else {
+          toast.error(data.message || 'Payment verification failed');
         }
-      },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      } catch (error) {
+        console.error("Verification Error:", error);
+        toast.error(error.message || "Payment verification failed");
+      }
+    }, 2000); // 2-second delay to mimic processing time
   };
 
-  // This function handles the payment initiation flow based on the selected plan.
-  const paymentRazorpay = async (planId) => {
+  // This function initiates the dummy payment process.
+  const paymentDummy = async (planId) => {
     try {
       if (!user) {
         setShowLogin(true);
         return;
       }
+      // Call the dummy payment endpoint
       const { data } = await axios.post(
-        backendUrl + "/api/user/pay-razor",
-        { planId },
+        `${backendUrl}/api/user/pay-dummy`,
+        { userId: user._id, planId },
         { headers: { token } }
       );
       if (data.success) {
@@ -117,7 +109,7 @@ const BuyCredit = () => {
             </p>
 
             <motion.button
-              onClick={() => paymentRazorpay(item.id)}
+              onClick={() => paymentDummy(item.id)}
               className="w-full bg-gray-800 text-white mt-8 text-sm rounded-md py-2.5 min-w-52"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
