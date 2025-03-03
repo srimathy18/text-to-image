@@ -1,14 +1,45 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
-
-*{
+* {
     font-family: Outfit;
 }
 
-.placeholder-color{
-    color:#e0e0e0;
+.placeholder-color {
+    color: #e0e0e0;
     font-weight: 300;
 }
 
-  
+body {
+    background: linear-gradient(135deg, 
+        #ffe4e1 0%,     /* Light Rose */
+        #ffc0cb 15%,    /* Pastel Pink */
+        #ffb6c1 30%,    /* Light Pink */
+        #ff99cc 45%,    /* Soft Blush */
+        #ff66b2 60%,    /* Bubblegum Pink */
+        #ff3399 75%,    /* Hot Pink */
+        #ff1493 85%,    /* Deep Pink */
+        #ff007f 100%    /* Vivid Pink */
+    );
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Enhanced Wavy Effect */
+body::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 400px;
+    background: radial-gradient(circle at top, 
+        rgba(255, 255, 255, 0.5) 10%, 
+        rgba(255, 192, 203, 0.3) 40%, 
+        rgba(255, 255, 255, 0) 90%);
+    top: 0;
+    left: 0;
+    opacity: 0.8;
+    z-index: -1;
+}

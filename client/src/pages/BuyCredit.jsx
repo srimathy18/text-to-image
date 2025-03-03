@@ -8,20 +8,22 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const BuyCredit = () => {
-  const { user, backendUrl, loadCreditsData, token, setShowLogin } = useContext(AppContext);
+  const { user, loadCreditsData, token, setShowLogin } = useContext(AppContext);
   const navigate = useNavigate();
+  const backendUrl = import.meta.env.VITE_BACKEND_URL; 
 
-  // This function simulates the dummy payment process.
+  // Simulated payment process
   const initPay = async (order) => {
-    // Simulate a delay as if processing payment
+    console.log("⏳ Verifying payment with receipt:", order.receipt);
     setTimeout(async () => {
       try {
-        // Call the dummy verify endpoint using the transaction receipt
         const { data } = await axios.post(
           `${backendUrl}/api/user/verify-dummy`,
           { receipt: order.receipt },
-          { headers: { token } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        console.log("✅ Payment Verification Response:", data);
         if (data.success) {
           loadCreditsData();
           navigate('/');
@@ -30,33 +32,39 @@ const BuyCredit = () => {
           toast.error(data.message || 'Payment verification failed');
         }
       } catch (error) {
-        console.error("Verification Error:", error);
-        toast.error(error.message || "Payment verification failed");
+        console.error("❌ Verification Error:", error);
+        toast.error(error.response?.data?.message || "Payment verification failed");
       }
-    }, 2000); // 2-second delay to mimic processing time
+    }, 2000);
   };
 
-  // This function initiates the dummy payment process.
+  // Initiate dummy payment
   const paymentDummy = async (planId) => {
     try {
       if (!user) {
+        console.warn("⚠️ User not logged in. Showing login modal.");
         setShowLogin(true);
         return;
       }
-      // Call the dummy payment endpoint
+
+      console.log("🚀 Initiating dummy payment for plan:", planId);
+      console.log("🚀 Sending request with:", { userId: user._id, planId });
+
       const { data } = await axios.post(
         `${backendUrl}/api/user/pay-dummy`,
         { userId: user._id, planId },
-        { headers: { token } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      console.log("✅ Dummy Payment API Response:", data);
       if (data.success) {
         initPay(data.order);
       } else {
         toast.error(data.message || "Payment failed. Try again.");
       }
     } catch (error) {
-      console.error("Payment Error:", error);
-      toast.error("Something went wrong. Please try again.");
+      console.error("❌ Payment Error:", error);
+      toast.error(error.response?.data?.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -68,7 +76,7 @@ const BuyCredit = () => {
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
       <motion.button
-        className="border border-gray-400 px-10 py-2 rounded-full mb-6"
+        className="border border-gray-400 px-10 py-2 rounded-full mb-6 text-gray-950"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -76,7 +84,7 @@ const BuyCredit = () => {
       </motion.button>
 
       <motion.h1
-        className="text-center text-3xl font-medium mb-6 sm:mb-10"
+        className="text-center text-3xl font-medium mb-6 sm:mb-10 text-black"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
